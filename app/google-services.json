@@ -42,6 +42,43 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793953086871:android:2dcccb001f7322460528d2",
+        "android_client_info": {
+          "package_name": "me.edwarjimenez.gpsbgausuario"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "793953086871-t0irnpjhmv9qs78p2ecdv4inqihmiq2h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "me.edwarjimenez.gpsbgausuario",
+            "certificate_hash": "f426e574ae6c260eea414164c2e051bf834d1a3a"
+          }
+        },
+        {
+          "client_id": "793953086871-65tqith2hn8sj9d0iua87abha39tv1qm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHZp_Lw3_GY8FdpChAopU3hqH7O_2Ltl0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "793953086871-65tqith2hn8sj9d0iua87abha39tv1qm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

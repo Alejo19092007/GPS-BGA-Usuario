@@ -23,7 +23,14 @@ import com.google.firebase.database.FirebaseDatabase
 import me.edwarjimenez.gpsbgausuario.ui.theme.*
 
 @Composable
-fun PerfilScreen(onLogout: () -> Unit) {
+fun PerfilScreen(
+    onLogout: () -> Unit,
+    onMiCuenta: () -> Unit = {},
+    onHistorial: () -> Unit = {},
+    onMisFavoritos: () -> Unit = {},
+    onAyuda: () -> Unit = {},
+    onAcercaDe: () -> Unit = {}
+) {
     val auth = remember { FirebaseAuth.getInstance() }
     val usuario = auth.currentUser
     val db = remember { FirebaseDatabase.getInstance() }
@@ -50,7 +57,6 @@ fun PerfilScreen(onLogout: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Header perfil
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -89,14 +95,13 @@ fun PerfilScreen(onLogout: () -> Unit) {
 
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
 
-                MenuItemPerfil(Icons.Default.Person, "Mi Cuenta", TextPrimary, TextMuted, BgCard) {}
+                MenuItemPerfil(Icons.Default.Person, "Mi Cuenta", TextPrimary, TextMuted, BgCard) { onMiCuenta() }
                 Spacer(modifier = Modifier.height(8.dp))
-                MenuItemPerfil(Icons.Default.History, "Historial de Viajes", TextPrimary, TextMuted, BgCard) {}
+                MenuItemPerfil(Icons.Default.History, "Historial de Viajes", TextPrimary, TextMuted, BgCard) { onHistorial() }
                 Spacer(modifier = Modifier.height(8.dp))
-                MenuItemPerfil(Icons.Default.Star, "Mis Favoritos", TextPrimary, TextMuted, BgCard) {}
+                MenuItemPerfil(Icons.Default.Star, "Mis Favoritos", TextPrimary, TextMuted, BgCard) { onMisFavoritos() }
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Notificaciones
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = BgCard),
@@ -126,12 +131,11 @@ fun PerfilScreen(onLogout: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                MenuItemPerfil(Icons.Default.Help, "Ayuda / Soporte", TextPrimary, TextMuted, BgCard) {}
+                MenuItemPerfil(Icons.Default.Help, "Ayuda / Soporte", TextPrimary, TextMuted, BgCard) { onAyuda() }
                 Spacer(modifier = Modifier.height(8.dp))
-                MenuItemPerfil(Icons.Default.Info, "Acerca de GPSBGA", TextPrimary, TextMuted, BgCard) {}
+                MenuItemPerfil(Icons.Default.Info, "Acerca de GPSBGA", TextPrimary, TextMuted, BgCard) { onAcercaDe() }
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Cerrar sesión
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = redBg),

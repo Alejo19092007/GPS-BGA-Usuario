@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -18,7 +17,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import me.edwarjimenez.gpsbgausuario.ui.auth.LoginScreen
 import me.edwarjimenez.gpsbgausuario.ui.auth.RegistroScreen
 import me.edwarjimenez.gpsbgausuario.ui.auth.RecuperarScreen
@@ -27,6 +25,10 @@ import me.edwarjimenez.gpsbgausuario.ui.map.MapaScreen
 import me.edwarjimenez.gpsbgausuario.ui.notifications.NotificacionesScreen
 import me.edwarjimenez.gpsbgausuario.ui.routes.MisRutasScreen
 import me.edwarjimenez.gpsbgausuario.ui.profile.PerfilScreen
+import me.edwarjimenez.gpsbgausuario.ui.profile.MiCuentaScreen
+import me.edwarjimenez.gpsbgausuario.ui.profile.HistorialScreen
+import me.edwarjimenez.gpsbgausuario.ui.profile.AyudaScreen
+import me.edwarjimenez.gpsbgausuario.ui.profile.AcercaDeScreen
 import me.edwarjimenez.gpsbgausuario.ui.bus.BusInfoScreen
 import me.edwarjimenez.gpsbgausuario.ui.theme.GpsBGAUsuarioTheme
 import me.edwarjimenez.gpsbgausuario.ui.theme.*
@@ -43,7 +45,11 @@ class MainActivity : ComponentActivity() {
 
                 val rutasSinNavBar = listOf("login", "registro", "recuperar")
                 val mostrarNavBar = currentRoute !in rutasSinNavBar &&
-                        currentRoute != "bus_info/{rutaId}"
+                        currentRoute != "bus_info/{rutaId}" &&
+                        currentRoute != "mi_cuenta" &&
+                        currentRoute != "historial" &&
+                        currentRoute != "ayuda" &&
+                        currentRoute != "acerca_de"
 
                 Scaffold(
                     bottomBar = {
@@ -209,8 +215,25 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("login") {
                                         popUpTo(0) { inclusive = true }
                                     }
-                                }
+                                },
+                                onMiCuenta = { navController.navigate("mi_cuenta") },
+                                onHistorial = { navController.navigate("historial") },
+                                onMisFavoritos = { navController.navigate("mis_rutas") },
+                                onAyuda = { navController.navigate("ayuda") },
+                                onAcercaDe = { navController.navigate("acerca_de") }
                             )
+                        }
+                        composable("mi_cuenta") {
+                            MiCuentaScreen(onBackClick = { navController.popBackStack() })
+                        }
+                        composable("historial") {
+                            HistorialScreen(onBackClick = { navController.popBackStack() })
+                        }
+                        composable("ayuda") {
+                            AyudaScreen(onBackClick = { navController.popBackStack() })
+                        }
+                        composable("acerca_de") {
+                            AcercaDeScreen(onBackClick = { navController.popBackStack() })
                         }
                     }
                 }

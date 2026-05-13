@@ -15,7 +15,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import me.edwarjimenez.gpsbgausuario.ui.theme.*
 
@@ -32,9 +31,34 @@ fun NotificacionesScreen() {
     val db = remember { FirebaseDatabase.getInstance() }
     var notificaciones by remember { mutableStateOf<List<Notificacion>>(emptyList()) }
 
-    // Escuchar cambios en buses y generar notificaciones
-    LaunchedEffect(Unit) {
-        db.getReference("buses").addValueEventListener(object : ValueEventListener {
+    val paradas = mapOf(
+        "7" to listOf(
+            "Terminal Los Cauchos", "Servientrega", "Carrera 8",
+            "Paragüitas", "Bucarica", "Transversal Oriental",
+            "CC Cacique", "Megamall", "Plaza Guarín",
+            "Autopista Floridablanca", "Retorno Plata Acero"
+        ),
+        "36" to listOf(
+            "González Chaparro", "Barrio La Paz", "Papi Quiero Piña",
+            "Miradores San Lorenzo", "CC Cacique", "Viaducto La Flora",
+            "Carrera 33", "Megamall", "Plaza Guarín",
+            "Plaza Satélite", "Puente Provenza", "Autopista Cañaveral"
+        ),
+        "27" to listOf(
+            "Terminal Caracolí", "Bucarica", "Bellavista",
+            "Carretera Antigua", "Viaducto La Flora", "Carrera 33",
+            "Calle 34", "Centro - Carrera 10", "Carrera 13", "Cacique Monterrey"
+        )
+    )
+
+    val nombresRutas = mapOf(
+        "7" to "Limoncito",
+        "36" to "Igsabelar 33",
+        "27" to "Caracolí - Centro"
+    )
+
+    DisposableEffect(Unit) {
+        val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val lista = mutableListOf<Notificacion>()
                 snapshot.children.forEach { busSnap ->
@@ -43,62 +67,15 @@ fun NotificacionesScreen() {
                     val paradaIndex = busSnap.child("paradaActual").getValue(Int::class.java) ?: 0
                     val vel = busSnap.child("velocidad").getValue(Double::class.java)?.toInt() ?: 0
 
-                    val nombresRutas = mapOf(
-                        "7" to "Limoncito",
-                        "36" to "Igsabelar 33",
-                        "27" to "Caracolí - Centro"
-                    )
-
-                    val paradas = mapOf(
-                        "7" to listOf(
-                            "Terminal Los Cauchos", "Servientrega", "Carrera 8",
-                            "Paragüitas", "Bucarica", "Transversal Oriental",
-                            "CC Cacique", "Megamall", "Plaza Guarín",
-                            "Autopista Floridablanca", "Retorno Plata Acero"
-                        ),
-                        "36" to listOf(
-                            "González Chaparro", "Barrio La Paz", "Papi Quiero Piña",
-                            "Miradores San Lorenzo", "CC Cacique", "Viaducto La Flora",
-                            "Carrera 33", "Megamall", "Plaza Guarín",
-                            "Plaza Satélite", "Puente Provenza", "Autopista Cañaveral"
-                        ),
-                        "27" to listOf(
-                            "Terminal Caracolí", "Bucarica", "Bellavista",
-                            "Carretera Antigua", "Viaducto La Flora", "Carrera 33",
-                            "Calle 34", "Centro - Carrera 10", "Carrera 13", "Cacique Monterrey"
-                        )
-                    )
-
                     if (estado == "EN_SERVICIO") {
                         val paradaNombre = paradas[rutaId]?.getOrNull(paradaIndex) ?: "Parada $paradaIndex"
                         lista.add(
                             Notificacion(
                                 id = busSnap.key ?: "",
-                                titulo = "🚌 Ruta $rutaId en servicio",
-                                mensaje = "El bus va a ${vel}km/h — En: $paradaNombre",
+                                titulo = "🚌 Ruta $rutaId · ${nombresRutas[rutaId]}",
+                                mensaje = "En servicio · ${vel}km/h · En: $paradaNombre",
                                 hora = "Ahora",
                                 tipo = "activo"
-                            )
-                        )
-                        if (paradaIndex > 0) {
-                            lista.add(
-                                Notificacion(
-                                    id = "${busSnap.key}_parada",
-                                    titulo = "📍 Ruta $rutaId · ${nombresRutas[rutaId]}",
-                                    mensaje = "Llegando a parada: $paradaNombre",
-                                    hora = "Hace ${paradaIndex * 2} min",
-                                    tipo = "parada"
-                                )
-                            )
-                        }
-                    } else {
-                        lista.add(
-                            Notificacion(
-                                id = busSnap.key ?: "",
-                                titulo = "⚠️ Ruta $rutaId fuera de servicio",
-                                mensaje = "El bus no está en operación",
-                                hora = "Hace un momento",
-                                tipo = "inactivo"
                             )
                         )
                     }
@@ -106,7 +83,11 @@ fun NotificacionesScreen() {
                 notificaciones = lista
             }
             override fun onCancelled(error: DatabaseError) {}
-        })
+        }
+
+        val ref = db.getReference("buses")
+        ref.addValueEventListener(listener)
+        onDispose { ref.removeEventListener(listener) }
     }
 
     Surface(modifier = Modifier.fillMaxSize(), color = BgDark) {
@@ -143,7 +124,8 @@ fun NotificacionesScreen() {
                         ) {
                             Text(text = "🔔", fontSize = 48.sp)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "Sin notificaciones", fontSize = 14.sp, color = TextMuted)
+                            Text(text = "Sin notificaciones activas", fontSize = 14.sp, color = TextMuted)
+                            Text(text = "Aparecerán cuando un bus esté en servicio", fontSize = 12.sp, color = TextMuted)
                         }
                     }
                 }

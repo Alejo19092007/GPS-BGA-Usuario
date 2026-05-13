@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.maps.android.compose.*
 import me.edwarjimenez.gpsbgausuario.ui.theme.*
@@ -67,8 +66,8 @@ fun MapaScreen() {
         "27" to android.graphics.Color.parseColor("#FFD700")
     )
 
-    LaunchedEffect(Unit) {
-        db.getReference("buses").addValueEventListener(object : ValueEventListener {
+    DisposableEffect(Unit) {
+        val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val lista = mutableListOf<BusEnMapa>()
                 snapshot.children.forEach { busSnap ->
@@ -76,6 +75,7 @@ fun MapaScreen() {
                     if (estado != "EN_SERVICIO") return@forEach
                     val lat = busSnap.child("latitud").getValue(Double::class.java) ?: return@forEach
                     val lng = busSnap.child("longitud").getValue(Double::class.java) ?: return@forEach
+                    if (lat == 0.0 || lng == 0.0) return@forEach
                     val rutaId = busSnap.child("rutaId").getValue(String::class.java) ?: ""
                     val vel = busSnap.child("velocidad").getValue(Double::class.java)?.toInt() ?: 0
                     val parada = busSnap.child("paradaActual").getValue(Int::class.java) ?: 0
@@ -84,7 +84,11 @@ fun MapaScreen() {
                 buses = lista
             }
             override fun onCancelled(error: DatabaseError) {}
-        })
+        }
+
+        val ref = db.getReference("buses")
+        ref.addValueEventListener(listener)
+        onDispose { ref.removeEventListener(listener) }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -94,7 +98,6 @@ fun MapaScreen() {
             properties = MapProperties(mapType = MapType.NORMAL),
             uiSettings = MapUiSettings(zoomControlsEnabled = false)
         ) {
-            // Dibujar rutas
             coordenadasRutas.forEach { (rutaId, coords) ->
                 val color = coloresRutas[rutaId] ?: android.graphics.Color.GREEN
                 Polyline(
@@ -104,7 +107,6 @@ fun MapaScreen() {
                 )
             }
 
-            // Marcadores de buses
             buses.forEach { bus ->
                 val posicion = LatLng(bus.lat, bus.lng)
                 Marker(
@@ -120,7 +122,6 @@ fun MapaScreen() {
             }
         }
 
-        // Panel superior
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -146,7 +147,6 @@ fun MapaScreen() {
             }
         }
 
-        // Leyenda de rutas
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

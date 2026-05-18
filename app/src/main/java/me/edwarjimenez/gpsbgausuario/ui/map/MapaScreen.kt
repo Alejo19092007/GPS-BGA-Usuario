@@ -1,5 +1,9 @@
 package me.edwarjimenez.gpsbgausuario.ui.map
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -28,6 +33,19 @@ data class BusEnMapa(
     val velocidad: Int,
     val paradaActual: Int
 )
+
+fun emojiToBitmapUsuario(emoji: String, sizePx: Int = 80): BitmapDescriptor {
+    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint().apply {
+        textSize = sizePx * 0.75f
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.DEFAULT
+        isAntiAlias = true
+    }
+    canvas.drawText(emoji, sizePx / 2f, sizePx * 0.85f, paint)
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+}
 
 @Composable
 fun MapaScreen() {
@@ -66,6 +84,48 @@ fun MapaScreen() {
         "27" to android.graphics.Color.parseColor("#FFD700")
     )
 
+    val paradasRutas = mapOf(
+        "7" to listOf(
+            Pair(LatLng(7.1390, -73.1180), "Terminal Los Cauchos"),
+            Pair(LatLng(7.1320, -73.1190), "Servientrega"),
+            Pair(LatLng(7.1250, -73.1200), "Carrera 8"),
+            Pair(LatLng(7.1180, -73.1210), "Paragüitas"),
+            Pair(LatLng(7.1100, -73.1190), "Bucarica"),
+            Pair(LatLng(7.1050, -73.1150), "Transversal Oriental"),
+            Pair(LatLng(7.0980, -73.1180), "CC Cacique"),
+            Pair(LatLng(7.0920, -73.1160), "Megamall"),
+            Pair(LatLng(7.0850, -73.1140), "Plaza Guarín"),
+            Pair(LatLng(7.0780, -73.1120), "Autopista Floridablanca"),
+            Pair(LatLng(7.0650, -73.1090), "Retorno Plata Acero")
+        ),
+        "36" to listOf(
+            Pair(LatLng(7.0550, -73.0980), "González Chaparro"),
+            Pair(LatLng(7.0620, -73.1020), "Barrio La Paz"),
+            Pair(LatLng(7.0720, -73.1080), "Papi Quiero Piña"),
+            Pair(LatLng(7.0820, -73.1120), "Miradores San Lorenzo"),
+            Pair(LatLng(7.0920, -73.1160), "CC Cacique"),
+            Pair(LatLng(7.1020, -73.1180), "Viaducto La Flora"),
+            Pair(LatLng(7.1120, -73.1200), "Carrera 33"),
+            Pair(LatLng(7.1200, -73.1210), "Megamall"),
+            Pair(LatLng(7.1150, -73.1190), "Plaza Guarín"),
+            Pair(LatLng(7.1050, -73.1170), "Plaza Satélite"),
+            Pair(LatLng(7.0950, -73.1150), "Puente Provenza"),
+            Pair(LatLng(7.0750, -73.1100), "Autopista Cañaveral")
+        ),
+        "27" to listOf(
+            Pair(LatLng(7.0900, -73.0850), "Terminal Caracolí"),
+            Pair(LatLng(7.0980, -73.0950), "Bucarica"),
+            Pair(LatLng(7.1050, -73.1050), "Bellavista"),
+            Pair(LatLng(7.1100, -73.1150), "Carretera Antigua"),
+            Pair(LatLng(7.1120, -73.1180), "Viaducto La Flora"),
+            Pair(LatLng(7.1150, -73.1200), "Carrera 33"),
+            Pair(LatLng(7.1200, -73.1220), "Calle 34"),
+            Pair(LatLng(7.1250, -73.1230), "Centro - Carrera 10"),
+            Pair(LatLng(7.1220, -73.1210), "Carrera 13"),
+            Pair(LatLng(7.1180, -73.1200), "Cacique Monterrey")
+        )
+    )
+
     DisposableEffect(Unit) {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -98,6 +158,9 @@ fun MapaScreen() {
             properties = MapProperties(mapType = MapType.NORMAL),
             uiSettings = MapUiSettings(zoomControlsEnabled = false)
         ) {
+            val busIcon = remember { emojiToBitmapUsuario("🚌", 160) }
+            val paradaIcon = remember { emojiToBitmapUsuario("🚏", 120) }
+
             coordenadasRutas.forEach { (rutaId, coords) ->
                 val color = coloresRutas[rutaId] ?: android.graphics.Color.GREEN
                 Polyline(
@@ -108,16 +171,21 @@ fun MapaScreen() {
             }
 
             buses.forEach { bus ->
+                paradasRutas[bus.rutaId]?.forEachIndexed { index, (ubicacion, nombre) ->
+                    Marker(
+                        state = MarkerState(position = ubicacion),
+                        title = nombre,
+                        snippet = "Parada ${index + 1} · Ruta ${bus.rutaId}",
+                        icon = paradaIcon
+                    )
+                }
+
                 val posicion = LatLng(bus.lat, bus.lng)
                 Marker(
                     state = MarkerState(position = posicion),
                     title = "Ruta ${bus.rutaId}",
                     snippet = "Velocidad: ${bus.velocidad} km/h",
-                    icon = BitmapDescriptorFactory.defaultMarker(
-                        if (bus.rutaId == "7") BitmapDescriptorFactory.HUE_GREEN
-                        else if (bus.rutaId == "36") BitmapDescriptorFactory.HUE_CYAN
-                        else BitmapDescriptorFactory.HUE_YELLOW
-                    )
+                    icon = busIcon
                 )
             }
         }

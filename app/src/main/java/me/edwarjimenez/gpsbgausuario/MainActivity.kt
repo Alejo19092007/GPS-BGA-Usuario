@@ -160,7 +160,8 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     NavHost(
                         navController = navController,
-                        startDestination = "login",
+                        //persistencia
+                        startDestination = if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null) "home" else "login",
                         modifier = Modifier.fillMaxSize().padding(paddingValues)
                     ) {
                         composable("login") {
